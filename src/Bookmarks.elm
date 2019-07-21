@@ -1,4 +1,4 @@
-module Bookmarks exposing (Bookmark, bookmark, unfilteredBookmarks)
+module Bookmarks exposing (Bookmark, BookmarkGroup, bookmark, unfilteredBookmarks)
 
 
 type alias BookmarkGroup =

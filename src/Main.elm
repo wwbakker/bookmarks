@@ -10,6 +10,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (on, onInput)
 import Json.Decode
 import Keyboard.Event exposing (KeyboardEvent, decodeKeyboardEvent)
+import PrivateBookmarks exposing (unfilteredPrivateBookmarks)
 
 
 main =
@@ -40,7 +41,7 @@ type alias Model =
 
 init : ( Model, Cmd message )
 init =
-    ( { filteredBookmarks = unfilteredBookmarks
+    ( { filteredBookmarks = unfilteredBookmarks ++ unfilteredPrivateBookmarks
       , selectionIndex = 0
       }
     , Cmd.none
