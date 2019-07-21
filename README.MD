@@ -11,7 +11,7 @@ Add your bookmarks inside `src/PrivateBookmarks.elm`.
 
 ## Building the application
 ```
-PS E:\dev\Repos\elmsandbox> elm make src/Main.elm
+PS E:\dev\Repos\bookmarks> elm make src/Main.elm
 Success! Compiled 1 module.
 ```
 Now the application is built as `index.html`. 
