@@ -96,7 +96,7 @@ updateSelection model kbEvent =
                             model.selectionIndex - 1
 
                     else
-                        model.selectionIndex
+                        0
 
                 Nothing ->
                     model.selectionIndex

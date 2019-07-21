@@ -18,20 +18,14 @@ bookmark caption href =
     { caption = caption, href = href }
 
 
-
---group : String -> List Bookmark -> BookmarkGroup
---group caption bookmarks =
---    { caption = caption
---    , bookmarks = bookmarks
---    }
-
-
 groups : List BookmarkGroup
 groups =
     [ { caption = "Google"
       , bookmarks =
-            [ bookmark "Google" "https://www.google.nl"
+            [ bookmark "Google" "http://www.google.nl/"
             , bookmark "Gmail" "http://mail.google.com"
+            , bookmark "Calendar" "http://calendar.google.com"
+            , bookmark "Drive" "http://drive.google.com/"
             ]
       }
     ]
@@ -39,6 +33,4 @@ groups =
 
 unfilteredBookmarks : List Bookmark
 unfilteredBookmarks =
-    [ bookmark "Google" "https://www.google.nl"
-    , bookmark "Tweakers" "https://www.tweakers.net"
-    ]
+    List.concatMap (\l -> l.bookmarks) groups
