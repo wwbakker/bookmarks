@@ -1,5 +1,7 @@
-module Main exposing (Bookmark, Model, Msg(..), bookmark, bookmarkToHtml, bookmarksFilter, init, main, unfilteredBookmarks, update, view)
+module Main exposing (Model, Msg(..), bookmarkToHtml, bookmarksFilter, init, main, update, view)
 
+import Array
+import Bookmarks exposing (Bookmark, unfilteredBookmarks)
 import Browser
 import Browser.Navigation exposing (load)
 import Debug exposing (log)
@@ -50,19 +52,8 @@ type Msg
     | HandleKeyboardEvent KeyboardEvent
 
 
-type alias Bookmark =
-    { href : String
-    , caption : String
-    }
-
-
 type alias SelectionIndex =
     Int
-
-
-bookmark : String -> String -> Bookmark
-bookmark href caption =
-    { href = href, caption = caption }
 
 
 bookmarkToHtml : ( Bookmark, Bool ) -> Html Msg
@@ -70,13 +61,6 @@ bookmarkToHtml ( bm, isSelected ) =
     li []
         [ a [ href bm.href, classList [ ( "bookmark", True ), ( "selected", isSelected ) ] ] [ text bm.caption ]
         ]
-
-
-unfilteredBookmarks : List Bookmark
-unfilteredBookmarks =
-    [ bookmark "https://www.google.nl" "Google"
-    , bookmark "https://www.tweakers.net" "Tweakers"
-    ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -90,33 +74,57 @@ update msg model =
             )
 
         HandleKeyboardEvent event ->
-            ( { model
-                | selectionIndex =
-                    case event.key of
-                        Just key ->
-                            if log "key" key == "ArrowDown" then
-                                model.selectionIndex + 1
+            ( updateSelection model event
+            , redirectToBookmark model event
+            )
 
-                            else if key == "ArrowUp" then
-                                model.selectionIndex - 1
 
-                            else
-                                model.selectionIndex
-
-                        Nothing ->
-                            model.selectionIndex
-              }
-            , case event.key of
+updateSelection : Model -> KeyboardEvent -> Model
+updateSelection model kbEvent =
+    { model
+        | selectionIndex =
+            case kbEvent.key of
                 Just key ->
-                    if key == "Enter" then
-                        load "https://www.google.nl"
+                    if key == "ArrowDown" then
+                        modBy (List.length model.filteredBookmarks) (model.selectionIndex + 1)
+
+                    else if key == "ArrowUp" then
+                        if (model.selectionIndex - 1) < 0 then
+                            List.length model.filteredBookmarks - 1
+
+                        else
+                            model.selectionIndex - 1
 
                     else
-                        Cmd.none
+                        model.selectionIndex
 
                 Nothing ->
-                    Cmd.none
-            )
+                    model.selectionIndex
+    }
+
+
+redirectToBookmark : Model -> KeyboardEvent -> Cmd Msg
+redirectToBookmark model kbEvent =
+    case kbEvent.key of
+        Just key ->
+            if key == "Enter" then
+                case selectedBookmark model of
+                    Just bm ->
+                        load bm.href
+
+                    Nothing ->
+                        Cmd.none
+
+            else
+                Cmd.none
+
+        Nothing ->
+            Cmd.none
+
+
+selectedBookmark : Model -> Maybe Bookmark
+selectedBookmark model =
+    Array.get model.selectionIndex (Array.fromList model.filteredBookmarks)
 
 
 bookmarksFilter : String -> Bookmark -> Bool
@@ -154,9 +162,6 @@ view : Model -> Html Msg
 view model =
     div
         []
-        --    [ button [ onClick Decrement ] [ text "-" ]
-        --    , div [] [ text (String.fromInt model) ]
-        --    , button [ onClick Increment ] [ text "+" ]
         [ Html.node "style" [] [ text css ]
         , ul [] (List.map bookmarkToHtml (bookmarksAndSelection model.filteredBookmarks model.selectionIndex))
         , input
