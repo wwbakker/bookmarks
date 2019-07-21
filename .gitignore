@@ -72,3 +72,5 @@ fabric.properties
 elm-stuff/
 
 src/PrivateBookmarks.elm
+
+index.html

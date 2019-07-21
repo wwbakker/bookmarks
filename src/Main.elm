@@ -69,7 +69,7 @@ update msg model =
     case msg of
         Filter newFilterString ->
             ( { model
-                | filteredBookmarks = List.filter (bookmarksFilter newFilterString) unfilteredBookmarks
+                | filteredBookmarks = List.filter (bookmarksFilter newFilterString) unfilteredBookmarks ++ unfilteredPrivateBookmarks
               }
             , Cmd.none
             )
