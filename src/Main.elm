@@ -1,15 +1,16 @@
-module Main exposing (Model, Msg(..), bookmarkToHtml, bookmarksFilter, init, main, update, view)
+module Main exposing (Model, Msg(..), bookmarkToHtml, init, main, update, view)
 
 import Array
-import Bookmarks exposing (Bookmark, unfilteredBookmarks)
+import Bookmarks exposing (Bookmark)
 import Browser
 import Browser.Navigation exposing (load)
+import Filtering exposing (filteredBookmarks)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (on, onInput)
 import Json.Decode
 import Keyboard.Event exposing (KeyboardEvent, decodeKeyboardEvent)
-import PrivateBookmarks exposing (unfilteredPrivateBookmarks)
+import PublicBookmarks exposing (bookmarks)
 
 
 main =
@@ -40,7 +41,7 @@ type alias Model =
 
 init : ( Model, Cmd message )
 init =
-    ( { filteredBookmarks = unfilteredBookmarks ++ unfilteredPrivateBookmarks
+    ( { filteredBookmarks = bookmarks
       , selectionIndex = 0
       }
     , Cmd.none
@@ -68,7 +69,7 @@ update msg model =
     case msg of
         Filter newFilterString ->
             ( { model
-                | filteredBookmarks = List.filter (bookmarksFilter newFilterString) (unfilteredBookmarks ++ unfilteredPrivateBookmarks)
+                | filteredBookmarks = filteredBookmarks newFilterString
               }
             , Cmd.none
             )
@@ -127,16 +128,6 @@ selectedBookmark model =
     Array.get model.selectionIndex (Array.fromList model.filteredBookmarks)
 
 
-bookmarksFilter : String -> Bookmark -> Bool
-bookmarksFilter filterString bm =
-    if filterString == "" then
-        True
-
-    else if String.startsWith (String.toLower filterString) (String.toLower bm.caption) then
-        True
-
-    else
-        False
 
 
 bookmarksAndSelection : List Bookmark -> SelectionIndex -> List ( Bookmark, Bool )

@@ -1,4 +1,4 @@
-module PrivateBookmarks exposing (privateGroups, unfilteredPrivateBookmarks)
+module PrivateBookmarks exposing (privateGroups, privateBookmarks)
 
 import Bookmarks exposing (Bookmark, BookmarkGroup, bookmark)
 
@@ -8,6 +8,6 @@ privateGroups =
     []
 
 
-unfilteredPrivateBookmarks : List Bookmark
-unfilteredPrivateBookmarks =
+privateBookmarks : List Bookmark
+privateBookmarks =
     List.concatMap (\l -> l.bookmarks) privateGroups

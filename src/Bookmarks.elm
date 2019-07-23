@@ -1,5 +1,4 @@
-module Bookmarks exposing (Bookmark, BookmarkGroup, bookmark, unfilteredBookmarks)
-
+module Bookmarks exposing (Bookmark, BookmarkGroup, bookmark)
 
 type alias BookmarkGroup =
     { caption : String
@@ -16,21 +15,3 @@ type alias Bookmark =
 bookmark : String -> String -> Bookmark
 bookmark caption href =
     { caption = caption, href = href }
-
-
-groups : List BookmarkGroup
-groups =
-    [ { caption = "Google"
-      , bookmarks =
-            [ bookmark "Google" "http://www.google.nl/"
-            , bookmark "Gmail" "http://mail.google.com"
-            , bookmark "Calendar" "http://calendar.google.com"
-            , bookmark "Drive" "http://drive.google.com/"
-            ]
-      }
-    ]
-
-
-unfilteredBookmarks : List Bookmark
-unfilteredBookmarks =
-    List.concatMap (\l -> l.bookmarks) groups
