@@ -4,7 +4,6 @@ import Array
 import Bookmarks exposing (Bookmark, unfilteredBookmarks)
 import Browser
 import Browser.Navigation exposing (load)
-import Debug exposing (log)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (on, onInput)
@@ -69,7 +68,7 @@ update msg model =
     case msg of
         Filter newFilterString ->
             ( { model
-                | filteredBookmarks = List.filter (bookmarksFilter newFilterString) unfilteredBookmarks ++ unfilteredPrivateBookmarks
+                | filteredBookmarks = List.filter (bookmarksFilter newFilterString) (unfilteredBookmarks ++ unfilteredPrivateBookmarks)
               }
             , Cmd.none
             )
