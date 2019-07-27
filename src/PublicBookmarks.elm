@@ -1,10 +1,11 @@
-module PublicBookmarks exposing (publicBookmarks, bookmarks)
+module PublicBookmarks exposing (bookmarkGroups)
 
 import Bookmarks exposing (Bookmark, BookmarkGroup, bookmark)
-import PrivateBookmarks exposing (privateBookmarks)
+import PrivateBookmarks exposing (privateGroups)
 
-groups : List BookmarkGroup
-groups =
+
+publicBookmarkGroups : List BookmarkGroup
+publicBookmarkGroups =
     [ { caption = "Google"
       , bookmarks =
             [ bookmark "Google" "http://www.google.nl/"
@@ -16,9 +17,6 @@ groups =
     ]
 
 
-publicBookmarks : List Bookmark
-publicBookmarks =
-    List.concatMap (\l -> l.bookmarks) groups
-
-bookmarks : List Bookmark
-bookmarks = privateBookmarks ++ publicBookmarks
+bookmarkGroups : List BookmarkGroup
+bookmarkGroups =
+    privateGroups ++ publicBookmarkGroups
