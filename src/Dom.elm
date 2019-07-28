@@ -1,42 +1,41 @@
-module Dom exposing (SelectionIndex, bookmarkGroupsToHtml, css)
+module Dom exposing (SelectionIndex, bookmarkGroupsToHtml)
 
 import Bookmarks exposing (Bookmark, BookmarkGroup)
-import Html exposing (..)
-import Html.Attributes exposing (..)
+import Css exposing (..)
+import Html.Styled exposing (Html, a, div, table, td, text, tr)
+import Html.Styled.Attributes exposing (css, href)
 
 
 type alias SelectionIndex =
     Int
 
 
-css : String
-css =
-    """
-body {
-    background-color: #ddd;
-}
+conditionalOn : IsSelected -> List Style -> List Style
+conditionalOn isSelected conditionalStyle =
+    if isSelected then
+        conditionalStyle
 
-h1 {
-    border-bottom: .2em dashed black;
-}
-.bookmark {
-}
-.bookmark.selected {
-    font-weight: bold;
-}
-"""
+    else
+        []
 
 
 bookmarkToHtml : ( Bookmark, IsSelected ) -> Html msg
 bookmarkToHtml ( bm, isSelected ) =
-    div [ classList [ ( "bookmark", True ), ( "selected", isSelected ) ] ]
+    div
+        [ css
+            (List.append (conditionalOn isSelected [ fontWeight bold ])
+                [ padding2 (px 10) (px 20) ]
+            )
+        ]
         [ a [ href bm.href ] [ text bm.caption ]
         ]
 
 
 bookmarkGroupHeader : BookmarkGroup -> Html msg
-bookmarkGroupHeader _ =
-    div [] []
+bookmarkGroupHeader bookmarkGroup =
+    div
+        []
+        [ text bookmarkGroup.caption ]
 
 
 swapTuple : ( a, b ) -> ( b, a )
@@ -80,20 +79,33 @@ applyBookmarksSelection groupIsSelected selectedBookmarkIndex bookmarks =
 
 bookmarkGroupToHtml : ( BookmarkGroup, IsSelected ) -> SelectionIndex -> Html msg
 bookmarkGroupToHtml ( bookmarkGroup, groupIsSelected ) selectedBookmarkIndex =
-    div [ classList [ ( "bookmark-group", True ), ( "selected", groupIsSelected ) ] ]
-        (bookmarkGroupHeader bookmarkGroup
-            :: (bookmarkGroup.bookmarks
-                    |> applyBookmarksSelection groupIsSelected selectedBookmarkIndex
-                    |> List.map bookmarkToHtml
-               )
-        )
+    tr
+        [ css [ nthChild "even" [ backgroundColor (rgb 240 240 240) ] ] ]
+        [ td [] [ bookmarkGroupHeader bookmarkGroup ]
+        , td
+            [ css
+                [ displayFlex
+                , flexDirection row
+                , flexWrap wrap
+                , alignItems left
+                ]
+            ]
+            (bookmarkGroup.bookmarks
+                |> applyBookmarksSelection groupIsSelected selectedBookmarkIndex
+                |> List.map bookmarkToHtml
+            )
+        ]
 
 
-bookmarkGroupsToHtml : List BookmarkGroup -> SelectionIndex -> SelectionIndex -> List (Html msg)
+bookmarkGroupsToHtml : List BookmarkGroup -> SelectionIndex -> SelectionIndex -> Html msg
 bookmarkGroupsToHtml bookmarkGroups selectedGroup selectedBookmark =
     let
         bookmarkGroupsWithIsSelected : List ( BookmarkGroup, IsSelected )
         bookmarkGroupsWithIsSelected =
             applySelection bookmarkGroups selectedGroup
     in
-    List.map (\bookmarkGroupWithIsSelected -> bookmarkGroupToHtml bookmarkGroupWithIsSelected selectedBookmark) bookmarkGroupsWithIsSelected
+    table []
+        (List.map
+            (\bookmarkGroupWithIsSelected -> bookmarkGroupToHtml bookmarkGroupWithIsSelected selectedBookmark)
+            bookmarkGroupsWithIsSelected
+        )

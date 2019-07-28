@@ -27,11 +27,22 @@ filterBookmarkGroup newFilterString bookmarkGroup =
     { bookmarkGroup | bookmarks = filterBookmarks newFilterString bookmarkGroup.bookmarks }
 
 
+filterBookmarkGroupElements : String -> List BookmarkGroup -> List BookmarkGroup
+filterBookmarkGroupElements newFilterString allBookmarkGroups =
+    List.map (\bmg -> filterBookmarkGroup newFilterString bmg) allBookmarkGroups
+
+
+filterNonEmptyBookmarkGroups : List BookmarkGroup -> List BookmarkGroup
+filterNonEmptyBookmarkGroups bookmarkGroups =
+    List.filter (\fbmg -> not (List.isEmpty fbmg.bookmarks)) bookmarkGroups
+
+
 filterBookmarkGroups : String -> List BookmarkGroup -> List BookmarkGroup
-filterBookmarkGroups newFilterString bookmarkGroupList =
-    let
-        filteredBmgs : List BookmarkGroup
-        filteredBmgs =
-            List.map (\bmg -> filterBookmarkGroup newFilterString bmg) bookmarkGroupList
-    in
-    List.filter (\fbmg -> List.isEmpty fbmg.bookmarks) filteredBmgs
+filterBookmarkGroups newFilterString allBookmarkGroups =
+    if String.trim newFilterString == "" then
+        allBookmarkGroups
+
+    else
+        allBookmarkGroups
+            |> filterBookmarkGroupElements newFilterString
+            |> filterNonEmptyBookmarkGroups

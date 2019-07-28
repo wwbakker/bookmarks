@@ -4,18 +4,20 @@ import Array
 import Bookmarks exposing (Bookmark, BookmarkGroup)
 import Browser
 import Browser.Navigation exposing (load)
-import Dom exposing (SelectionIndex, bookmarkGroupsToHtml, css)
+import Dom exposing (SelectionIndex, bookmarkGroupsToHtml)
 import Filtering exposing (filterBookmarkGroups)
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (on, onInput)
+import Html.Styled exposing (..)
+import Html.Styled.Attributes exposing (..)
+import Html.Styled.Events exposing (on, onInput)
 import Json.Decode
 import Keyboard.Event exposing (KeyboardEvent, decodeKeyboardEvent)
 import PublicBookmarks exposing (bookmarkGroups)
+import Regex
 
 
+main : Program () Model Msg
 main =
-    Browser.element { init = \() -> init, view = view, update = update, subscriptions = \_ -> Sub.none }
+    Browser.element { init = \() -> init, view = view >> toUnstyled, update = update, subscriptions = \_ -> Sub.none }
 
 
 type alias Model =
@@ -53,27 +55,70 @@ update msg model =
             )
 
 
+type SelectAction
+    = Down
+    | Up
+    | NoAction
+    | Reset
+
+
+updatedIndex : SelectionIndex -> Int -> SelectAction -> SelectionIndex
+updatedIndex currentSelectionIndex listLength selectAction =
+    case selectAction of
+        Down ->
+            modBy listLength (currentSelectionIndex + 1)
+
+        Up ->
+            if (currentSelectionIndex - 1) < 0 then
+                listLength - 1
+
+            else
+                currentSelectionIndex - 1
+
+        NoAction ->
+            currentSelectionIndex
+
+        Reset ->
+            0
+
+
+letterRegex : Regex.Regex
+letterRegex =
+    Maybe.withDefault Regex.never <|
+        Regex.fromString "^\\w$"
+
+
+selectionActionFromKeyboardEvent : KeyboardEvent -> String -> String -> SelectAction
+selectionActionFromKeyboardEvent kbEvent upKey downKey =
+    case kbEvent.key of
+        Just key ->
+            if key == downKey then
+                Down
+
+            else if key == upKey then
+                Up
+
+            else if Regex.contains letterRegex key then
+                Reset
+
+            else
+                NoAction
+
+        Nothing ->
+            NoAction
+
+
 updateSelection : Model -> KeyboardEvent -> Model
 updateSelection model kbEvent =
-    { model
-        | selectedBookmarkGroupIndex =
-            case kbEvent.key of
-                Just key ->
-                    if key == "ArrowDown" then
-                        modBy (List.length model.filteredBookmarkGroups) (model.selectedBookmarkGroupIndex + 1)
-
-                    else if key == "ArrowUp" then
-                        if (model.selectedBookmarkGroupIndex - 1) < 0 then
-                            List.length model.filteredBookmarkGroups - 1
-
-                        else
-                            model.selectedBookmarkGroupIndex - 1
-
-                    else
-                        0
-
-                Nothing ->
-                    model.selectedBookmarkGroupIndex
+    { filteredBookmarkGroups = model.filteredBookmarkGroups
+    , selectedBookmarkGroupIndex =
+        updatedIndex model.selectedBookmarkGroupIndex
+            (List.length model.filteredBookmarkGroups)
+            (selectionActionFromKeyboardEvent kbEvent "ArrowUp" "ArrowDown")
+    , selectedBookmarkIndex =
+        updatedIndex model.selectedBookmarkIndex
+            (Maybe.withDefault 0 (Maybe.map (\bmg -> List.length bmg.bookmarks) (selectedBookmarkGroup model)))
+            (selectionActionFromKeyboardEvent kbEvent "ArrowLeft" "ArrowRight")
     }
 
 
@@ -96,9 +141,14 @@ redirectToBookmark model kbEvent =
             Cmd.none
 
 
+selectedBookmarkGroup : Model -> Maybe BookmarkGroup
+selectedBookmarkGroup model =
+    getByIndex model.selectedBookmarkGroupIndex model.filteredBookmarkGroups
+
+
 selectedBookmark : Model -> Maybe Bookmark
 selectedBookmark model =
-    case getByIndex model.selectedBookmarkGroupIndex model.filteredBookmarkGroups of
+    case selectedBookmarkGroup model of
         Nothing ->
             Nothing
 
@@ -115,8 +165,7 @@ view : Model -> Html Msg
 view model =
     div
         []
-        [ Html.node "style" [] [ text css ]
-        , div [] (bookmarkGroupsToHtml model.filteredBookmarkGroups model.selectedBookmarkGroupIndex model.selectedBookmarkIndex)
+        [ bookmarkGroupsToHtml model.filteredBookmarkGroups model.selectedBookmarkGroupIndex model.selectedBookmarkIndex
         , input
             [ placeholder "filter"
             , onInput Filter
