@@ -1,48 +1,34 @@
-module Main exposing (Model, Msg(..), bookmarkToHtml, init, main, update, view)
+module Main exposing (Model, Msg(..), init, main, update, view)
 
 import Array
-import Bookmarks exposing (Bookmark)
+import Bookmarks exposing (Bookmark, BookmarkGroup)
 import Browser
 import Browser.Navigation exposing (load)
-import Filtering exposing (filteredBookmarks)
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (on, onInput)
+import Dom exposing (SelectionIndex, bookmarkGroupsToHtml)
+import Filtering exposing (filterBookmarkGroups)
+import Html.Styled exposing (..)
+import Html.Styled.Attributes exposing (..)
+import Html.Styled.Events exposing (on, onInput)
 import Json.Decode
 import Keyboard.Event exposing (KeyboardEvent, decodeKeyboardEvent)
-import PublicBookmarks exposing (bookmarks)
+import PublicBookmarks exposing (bookmarkGroups)
+import Regex
 
 
+main : Program () Model Msg
 main =
-    Browser.element { init = \() -> init, view = view, update = update, subscriptions = \_ -> Sub.none }
-
-
-css : String
-css =
-    """
-body {
-    background-color: #ddd;
-}
-
-h1 {
-    border-bottom: .2em dashed black;
-}
-.bookmark {
-}
-.bookmark.selected {
-    font-weight: bold;
-}
-"""
+    Browser.element { init = \() -> init, view = view >> toUnstyled, update = update, subscriptions = \_ -> Sub.none }
 
 
 type alias Model =
-    { filteredBookmarks : List Bookmark, selectionIndex : SelectionIndex }
+    { filteredBookmarkGroups : List BookmarkGroup, selectedBookmarkGroupIndex : SelectionIndex, selectedBookmarkIndex : SelectionIndex }
 
 
 init : ( Model, Cmd message )
 init =
-    ( { filteredBookmarks = bookmarks
-      , selectionIndex = 0
+    ( { filteredBookmarkGroups = bookmarkGroups
+      , selectedBookmarkGroupIndex = 0
+      , selectedBookmarkIndex = 0
       }
     , Cmd.none
     )
@@ -53,23 +39,12 @@ type Msg
     | HandleKeyboardEvent KeyboardEvent
 
 
-type alias SelectionIndex =
-    Int
-
-
-bookmarkToHtml : ( Bookmark, Bool ) -> Html Msg
-bookmarkToHtml ( bm, isSelected ) =
-    li []
-        [ a [ href bm.href, classList [ ( "bookmark", True ), ( "selected", isSelected ) ] ] [ text bm.caption ]
-        ]
-
-
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Filter newFilterString ->
             ( { model
-                | filteredBookmarks = filteredBookmarks newFilterString
+                | filteredBookmarkGroups = filterBookmarkGroups newFilterString bookmarkGroups
               }
             , Cmd.none
             )
@@ -80,27 +55,70 @@ update msg model =
             )
 
 
+type SelectAction
+    = Down
+    | Up
+    | NoAction
+    | Reset
+
+
+updatedIndex : SelectionIndex -> Int -> SelectAction -> SelectionIndex
+updatedIndex currentSelectionIndex listLength selectAction =
+    case selectAction of
+        Down ->
+            modBy listLength (currentSelectionIndex + 1)
+
+        Up ->
+            if (currentSelectionIndex - 1) < 0 then
+                listLength - 1
+
+            else
+                currentSelectionIndex - 1
+
+        NoAction ->
+            currentSelectionIndex
+
+        Reset ->
+            0
+
+
+letterRegex : Regex.Regex
+letterRegex =
+    Maybe.withDefault Regex.never <|
+        Regex.fromString "^\\w$"
+
+
+selectionActionFromKeyboardEvent : KeyboardEvent -> String -> String -> SelectAction
+selectionActionFromKeyboardEvent kbEvent upKey downKey =
+    case kbEvent.key of
+        Just key ->
+            if key == downKey then
+                Down
+
+            else if key == upKey then
+                Up
+
+            else if Regex.contains letterRegex key then
+                Reset
+
+            else
+                NoAction
+
+        Nothing ->
+            NoAction
+
+
 updateSelection : Model -> KeyboardEvent -> Model
 updateSelection model kbEvent =
-    { model
-        | selectionIndex =
-            case kbEvent.key of
-                Just key ->
-                    if key == "ArrowDown" then
-                        modBy (List.length model.filteredBookmarks) (model.selectionIndex + 1)
-
-                    else if key == "ArrowUp" then
-                        if (model.selectionIndex - 1) < 0 then
-                            List.length model.filteredBookmarks - 1
-
-                        else
-                            model.selectionIndex - 1
-
-                    else
-                        0
-
-                Nothing ->
-                    model.selectionIndex
+    { filteredBookmarkGroups = model.filteredBookmarkGroups
+    , selectedBookmarkGroupIndex =
+        updatedIndex model.selectedBookmarkGroupIndex
+            (List.length model.filteredBookmarkGroups)
+            (selectionActionFromKeyboardEvent kbEvent "ArrowUp" "ArrowDown")
+    , selectedBookmarkIndex =
+        updatedIndex model.selectedBookmarkIndex
+            (Maybe.withDefault 0 (Maybe.map (\bmg -> List.length bmg.bookmarks) (selectedBookmarkGroup model)))
+            (selectionActionFromKeyboardEvent kbEvent "ArrowLeft" "ArrowRight")
     }
 
 
@@ -123,38 +141,31 @@ redirectToBookmark model kbEvent =
             Cmd.none
 
 
+selectedBookmarkGroup : Model -> Maybe BookmarkGroup
+selectedBookmarkGroup model =
+    getByIndex model.selectedBookmarkGroupIndex model.filteredBookmarkGroups
+
+
 selectedBookmark : Model -> Maybe Bookmark
 selectedBookmark model =
-    Array.get model.selectionIndex (Array.fromList model.filteredBookmarks)
+    case selectedBookmarkGroup model of
+        Nothing ->
+            Nothing
+
+        Just bmg ->
+            getByIndex model.selectedBookmarkIndex bmg.bookmarks
 
 
-
-
-bookmarksAndSelection : List Bookmark -> SelectionIndex -> List ( Bookmark, Bool )
-bookmarksAndSelection bm si =
-    let
-        bookmarksWithIndices : List ( Int, Bookmark )
-        bookmarksWithIndices =
-            List.indexedMap Tuple.pair bm
-
-        isSelected : Int -> Bool
-        isSelected i =
-            i == si
-    in
-    List.map swapTuple (List.map (Tuple.mapFirst isSelected) bookmarksWithIndices)
-
-
-swapTuple : ( a, b ) -> ( b, a )
-swapTuple ( x, y ) =
-    ( y, x )
+getByIndex : Int -> List a -> Maybe a
+getByIndex index list =
+    Array.get index (Array.fromList list)
 
 
 view : Model -> Html Msg
 view model =
     div
         []
-        [ Html.node "style" [] [ text css ]
-        , ul [] (List.map bookmarkToHtml (bookmarksAndSelection model.filteredBookmarks model.selectionIndex))
+        [ bookmarkGroupsToHtml model.filteredBookmarkGroups model.selectedBookmarkGroupIndex model.selectedBookmarkIndex
         , input
             [ placeholder "filter"
             , onInput Filter
