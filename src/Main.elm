@@ -3,7 +3,7 @@ module Main exposing (Msg(..), init, main, update, view)
 import Browser
 import Browser.Navigation exposing (load)
 import DataModel exposing (Bookmark, BookmarkGroup, Model)
-import Dom exposing (bookmarkGroupsToHtml)
+import Dom exposing (bookmarkGroupsToHtml, filterInputCss)
 import Filtering exposing (filterBookmarkGroups)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
@@ -75,7 +75,8 @@ view model =
         []
         [ bookmarkGroupsToHtml model.filteredBookmarkGroups model.selectedBookmarkGroupIndex model.selectedBookmarkIndex
         , input
-            [ placeholder "filter"
+            [ filterInputCss
+            , placeholder "find"
             , onInput Filter
             , on "keydown" <|
                 Json.Decode.map HandleKeyboardEvent decodeKeyboardEvent

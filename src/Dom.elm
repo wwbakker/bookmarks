@@ -1,4 +1,4 @@
-module Dom exposing (bookmarkGroupsToHtml)
+module Dom exposing (bookmarkGroupsToHtml, filterInputCss)
 
 import Css exposing (..)
 import DataModel exposing (Bookmark, BookmarkGroup, SelectionIndex)
@@ -20,7 +20,9 @@ bookmarkToHtml ( bm, isSelected ) =
     div
         [ css
             (List.append (conditionalOn isSelected [ fontWeight bold ])
-                [ padding2 (px 10) (px 20) ]
+                [ padding2 (px 10) (px 20)
+                , fontFamily sansSerif
+                ]
             )
         ]
         [ a [ href bm.href ] [ text bm.caption ]
@@ -30,7 +32,10 @@ bookmarkToHtml ( bm, isSelected ) =
 bookmarkGroupHeader : BookmarkGroup -> Html msg
 bookmarkGroupHeader bookmarkGroup =
     div
-        []
+        [ css
+            [ fontFamily sansSerif
+            ]
+        ]
         [ text bookmarkGroup.caption ]
 
 
@@ -76,7 +81,12 @@ applyBookmarksSelection groupIsSelected selectedBookmarkIndex bookmarks =
 bookmarkGroupToHtml : ( BookmarkGroup, IsSelected ) -> SelectionIndex -> Html msg
 bookmarkGroupToHtml ( bookmarkGroup, groupIsSelected ) selectedBookmarkIndex =
     tr
-        [ css [ nthChild "even" [ backgroundColor (rgb 240 240 240) ] ] ]
+        [ css
+            [ backgroundColor (rgb 244 244 255)
+            , nthChild "even"
+                [ backgroundColor (rgb 255 247 244) ]
+            ]
+        ]
         [ td [] [ bookmarkGroupHeader bookmarkGroup ]
         , td
             [ css
@@ -105,3 +115,15 @@ bookmarkGroupsToHtml bookmarkGroups selectedGroup selectedBookmark =
             (\bookmarkGroupWithIsSelected -> bookmarkGroupToHtml bookmarkGroupWithIsSelected selectedBookmark)
             bookmarkGroupsWithIsSelected
         )
+
+
+filterInputCss : Html.Styled.Attribute msg
+filterInputCss =
+    css
+        [ position fixed
+        , bottom (px 0)
+        , width (pct 97)
+        , fontFamily monospace
+        , padding (px 5)
+        , borderBottomStyle none
+        ]
