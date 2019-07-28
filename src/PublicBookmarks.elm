@@ -1,6 +1,6 @@
 module PublicBookmarks exposing (bookmarkGroups)
 
-import Bookmarks exposing (Bookmark, BookmarkGroup, bookmark)
+import DataModel exposing (Bookmark, BookmarkGroup)
 import PrivateBookmarks exposing (privateGroups)
 
 
@@ -8,10 +8,10 @@ publicBookmarkGroups : List BookmarkGroup
 publicBookmarkGroups =
     [ { caption = "Google"
       , bookmarks =
-            [ bookmark "Google" "http://www.google.nl/"
-            , bookmark "Gmail" "http://mail.google.com"
-            , bookmark "Calendar" "http://calendar.google.com"
-            , bookmark "Drive" "http://drive.google.com/"
+            [ Bookmark "Google" "http://www.google.nl/"
+            , Bookmark "Gmail" "http://mail.google.com"
+            , Bookmark "Calendar" "http://calendar.google.com"
+            , Bookmark "Drive" "http://drive.google.com/"
             ]
       }
     ]

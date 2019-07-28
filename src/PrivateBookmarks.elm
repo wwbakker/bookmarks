@@ -1,6 +1,6 @@
 module PrivateBookmarks exposing (privateGroups)
 
-import Bookmarks exposing (Bookmark, BookmarkGroup, bookmark)
+import DataModel exposing (Bookmark, BookmarkGroup)
 
 
 privateGroups : List BookmarkGroup

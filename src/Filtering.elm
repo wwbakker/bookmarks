@@ -1,6 +1,6 @@
 module Filtering exposing (filterBookmarkGroups)
 
-import Bookmarks exposing (Bookmark, BookmarkGroup)
+import DataModel exposing (Bookmark, BookmarkGroup)
 import List.Extra exposing (uniqueBy)
 
 

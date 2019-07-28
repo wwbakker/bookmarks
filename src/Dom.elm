@@ -1,13 +1,9 @@
-module Dom exposing (SelectionIndex, bookmarkGroupsToHtml)
+module Dom exposing (bookmarkGroupsToHtml)
 
-import Bookmarks exposing (Bookmark, BookmarkGroup)
 import Css exposing (..)
+import DataModel exposing (Bookmark, BookmarkGroup, SelectionIndex)
 import Html.Styled exposing (Html, a, div, table, td, text, tr)
 import Html.Styled.Attributes exposing (css, href)
-
-
-type alias SelectionIndex =
-    Int
 
 
 conditionalOn : IsSelected -> List Style -> List Style
