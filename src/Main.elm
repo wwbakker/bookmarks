@@ -73,8 +73,7 @@ view : Model -> Html Msg
 view model =
     div
         []
-        [ bookmarkGroupsToHtml model.filteredBookmarkGroups model.selectedBookmarkGroupIndex model.selectedBookmarkIndex
-        , input
+        [ input
             [ filterInputCss
             , placeholder "find"
             , onInput Filter
@@ -84,5 +83,6 @@ view model =
             , id "outermost"
             , autofocus True
             ]
-            []
+            [] ,
+          bookmarkGroupsToHtml model.filteredBookmarkGroups model.selectedBookmarkGroupIndex model.selectedBookmarkIndex
         ]
