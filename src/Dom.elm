@@ -1,6 +1,6 @@
 module Dom exposing (bookmarkGroupsToHtml, filterInputCss)
 
-import Css exposing (..)
+import Css exposing (Style, alignItems, backgroundColor, bold, borderBottomStyle, bottom, displayFlex, fixed, flexDirection, flexWrap, fontFamily, fontWeight, left, monospace, none, nthChild, padding, padding2, pct, position, px, rgb, row, sansSerif, width, wrap)
 import DataModel exposing (Bookmark, BookmarkGroup, SelectionIndex)
 import Html.Styled exposing (Html, a, div, table, td, text, tr)
 import Html.Styled.Attributes exposing (css, href)
