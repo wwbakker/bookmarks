@@ -1,6 +1,6 @@
 module Main exposing (Msg(..), init, main, update, view)
 
-import Browser
+import Browser exposing (Document)
 import Browser.Navigation exposing (load)
 import DataModel exposing (Bookmark, BookmarkGroup, Model)
 import Dom exposing (bookmarkGroupsToHtml, filterInputCss)
@@ -16,7 +16,7 @@ import Selecting exposing (selectedBookmark, updateSelection)
 
 main : Program () Model Msg
 main =
-    Browser.element { init = \() -> init, view = view >> toUnstyled, update = update, subscriptions = \_ -> Sub.none }
+    Browser.document { init = \() -> init, view = view, update = update, subscriptions = \_ -> Sub.none }
 
 
 init : ( Model, Cmd message )
@@ -69,20 +69,24 @@ redirectToBookmark model kbEvent =
             Cmd.none
 
 
-view : Model -> Html Msg
+view : Model -> Document Msg
 view model =
-    div
-        []
-        [ input
-            [ filterInputCss
-            , placeholder "find"
-            , onInput Filter
-            , on "keydown" <|
-                Json.Decode.map HandleKeyboardEvent decodeKeyboardEvent
-            , tabindex 0
-            , id "outermost"
-            , autofocus True
-            ]
-            [] ,
-          bookmarkGroupsToHtml model.filteredBookmarkGroups model.selectedBookmarkGroupIndex model.selectedBookmarkIndex
-        ]
+    { title = "Bookmarks"
+    , body =  List.map toUnstyled (bodyContents model)
+    }
+
+bodyContents : Model -> List (Html Msg)
+bodyContents model =
+    [ input
+      [ filterInputCss
+      , placeholder "find"
+      , onInput Filter
+      , on "keydown" <|
+          Json.Decode.map HandleKeyboardEvent decodeKeyboardEvent
+      , tabindex 0
+      , id "outermost"
+      , autofocus True
+      ]
+      []
+    , bookmarkGroupsToHtml model.filteredBookmarkGroups model.selectedBookmarkGroupIndex model.selectedBookmarkIndex]
+
