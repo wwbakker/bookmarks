@@ -86,6 +86,7 @@ bodyContents model =
       , tabindex 0
       , id "outermost"
       , autofocus True
+      , autocomplete False
       ]
       []
     , bookmarkGroupsToHtml model.filteredBookmarkGroups model.selectedBookmarkGroupIndex model.selectedBookmarkIndex]
